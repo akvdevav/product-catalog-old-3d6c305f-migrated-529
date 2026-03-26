@@ -1,24 +1,27 @@
 package com.example.productcatalog.messaging;
 
 import com.example.productcatalog.model.Product;
-import org.springframework.jms.core.JmsTemplate;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 @Component
 public class ProductEventPublisher {
 
-    private static final String QUEUE = "product-events";
-    private final JmsTemplate jmsTemplate;
+    @Value("${app.rabbitmq.queue}")
+    private String queue;
 
-    public ProductEventPublisher(JmsTemplate jmsTemplate) {
-        this.jmsTemplate = jmsTemplate;
+    private final RabbitTemplate rabbitTemplate;
+
+    public ProductEventPublisher(RabbitTemplate rabbitTemplate) {
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     public void publishCreated(Product product) {
-        jmsTemplate.convertAndSend(QUEUE, "CREATED:" + product.getId() + ":" + product.getName());
+        rabbitTemplate.convertAndSend(queue, "CREATED:" + product.getId() + ":" + product.getName());
     }
 
     public void publishDeleted(Long id) {
-        jmsTemplate.convertAndSend(QUEUE, "DELETED:" + id);
+        rabbitTemplate.convertAndSend(queue, "DELETED:" + id);
     }
 }
